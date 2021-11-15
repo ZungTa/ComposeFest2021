@@ -27,6 +27,9 @@ import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.ConstraintSet
+import androidx.constraintlayout.compose.Dimension
 import coil.compose.rememberImagePainter
 import com.example.layoutscodelab.ui.theme.LayoutsCodelabTheme
 import kotlinx.coroutines.coroutineScope
@@ -41,9 +44,96 @@ class MainActivity : ComponentActivity() {
 //                Surface(color = MaterialTheme.colors.background) {
 //                    PhotographerCard()
 //                }
-                LayoutsCodelab()
+//                LayoutsCodelab()
+                TwoTexts(text1 = "text1", text2 = "text2")
             }
         }
+    }
+}
+
+@Composable
+fun TwoTexts(modifier: Modifier = Modifier, text1: String, text2: String) {
+    Row(modifier = modifier.height(IntrinsicSize.Min)) {
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp)
+                .wrapContentWidth(Alignment.Start),
+            text = text1
+        )
+
+        Divider(color = Color.Black, modifier = Modifier.fillMaxHeight().width(1.dp))
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 4.dp)
+                .wrapContentWidth(Alignment.End),
+            text = text2
+        )
+    }
+}
+
+@Preview
+@Composable
+fun TwoTextsPreview() {
+    LayoutsCodelabTheme {
+        Surface {
+            TwoTexts(text1 = "Hi", text2 = "there")
+        }
+    }
+}
+
+@Composable
+fun DecoupledConstraintLayout() {
+    BoxWithConstraints {
+        val constraints = if (maxWidth < maxHeight) {
+            decoupledConstraints(margin = 16.dp) // Portrait constraints
+        } else {
+            decoupledConstraints(margin = 32.dp) // Landscape constraints
+        }
+
+        ConstraintLayout(constraints) {
+            Button(
+                onClick = { /* Do something */ },
+                modifier = Modifier.layoutId("button")
+            ) {
+                Text("Button")
+            }
+
+            Text("Text", Modifier.layoutId("text"))
+        }
+    }
+}
+
+private fun decoupledConstraints(margin: Dp): ConstraintSet {
+    return ConstraintSet {
+        val button = createRefFor("button")
+        val text = createRefFor("text")
+
+        constrain(button) {
+            top.linkTo(parent.top, margin= margin)
+        }
+        constrain(text) {
+            top.linkTo(button.bottom, margin)
+        }
+    }
+}
+
+@Composable
+fun ConstraintLayoutContent() {
+    ConstraintLayout(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val text = createRef()
+
+        val guideline = createGuidelineFromStart(0.5f)
+        Text(
+            "This is a very very very very very very very long text",
+            Modifier.constrainAs(text) {
+                linkTo(guideline, parent.end)
+                width = Dimension.preferredWrapContent
+            }
+        )
     }
 }
 
@@ -93,17 +183,8 @@ val topics = listOf(
 @Composable
 fun BodyContent(modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier
-            .background(color = Color.LightGray)
-            .size(200.dp)
-            .padding(16.dp)
-            .horizontalScroll(rememberScrollState())
     ) {
-        StaggeredGrid {
-            for (topic in topics) {
-                Chip(modifier = Modifier.padding(8.dp), text = topic)
-            }
-        }
+        ConstraintLayoutContent()
     }
 }
 
@@ -142,14 +223,6 @@ fun Chip(
             Spacer(modifier = Modifier.width(4.dp))
             Text(text = text)
         }
-    }
-}
-
-@Preview
-@Composable
-fun ChipPreview() {
-    LayoutsCodelabTheme {
-        Chip(text = "Hi there1")
     }
 }
 
@@ -245,7 +318,8 @@ fun LayoutsCodelab() {
            BodyContent(
                Modifier
                    .padding(innerPadding)
-                   .padding(8.dp))
+                   .padding(8.dp)
+           )
     }
 }
 
